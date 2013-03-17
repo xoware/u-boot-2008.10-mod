@@ -1,0 +1,22 @@
+dir ./common
+dir ./disk
+dir ./board/cavium/cns3000
+dir ./board/cavium/cns3000/rtl8367
+dir ./board/cavium/cns3000
+dir ./net
+dir ./lib_generic
+dir ./lib_arm
+dir ./cpu/arm11mpcore
+dir ./fs/ext2
+dir ./fs/fat
+dir ./drivers/block
+dir ./drivers/rtc
+dir ./drivers/pcmcia
+dir ./drivers/bios_emulator/x86emu
+dir ./drivers/bios_emulator
+dir ./drivers/video
+dir ./drivers/mtd
+dir ./drivers/serial
+dir ./drivers/mmc
+dir ./drivers/usb
+target remote 192.168.1.90:2001

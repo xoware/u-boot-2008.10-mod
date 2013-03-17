@@ -1,0 +1,74 @@
+#include <common.h>
+#include <command.h>
+#include "spi_bcm53115m.h"
+
+int do_bcm (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
+{
+	const char *cmd;
+	int page, offset, len;
+	u8 u8_value;
+	u16 u16_value;
+	u32 u32_value;
+
+	cns3xxx_spi_initial();
+
+	if(argc >= 5) {
+		page = simple_strtol(argv[2], 0, 0);
+		offset = simple_strtol(argv[3], 0, 0);
+		len = simple_strtol(argv[4], 0, 0);
+	}
+
+	cmd = argv[1];
+	if ((strcmp(cmd, "read") == 0) && (argc == 5)) {
+		switch(len) {
+		case 1:
+			bcm53115M_reg_read(page, offset, (u8 *)&u8_value, 1);
+			printf("u8_value: 0x%x\n", u8_value);
+			break;
+		case 2:
+			bcm53115M_reg_read(page, offset, (u8 *)&u16_value, 2);
+			printf("u16_value: 0x%x\n", u16_value);
+			break;
+		case 4:
+			bcm53115M_reg_read(page, offset, (u8 *)&u32_value, 4);
+			printf("u32_value: 0x%x\n", u32_value);
+			break;
+		default:
+			printf ("Usage:\n%s\n", cmdtp->usage);
+			return 1;
+		}		
+	}	
+	else if ((strcmp(cmd, "write") == 0) && (argc == 6)) {
+		switch(len) {
+		case 1:
+			u8_value = simple_strtol(argv[5], 0, 0);
+   		bcm53115M_reg_write(page, offset, (u8 *)&u8_value, 1);
+			break;
+		case 2:
+			u16_value = simple_strtol(argv[5], 0, 0);
+   		bcm53115M_reg_write(page, offset, (u8 *)&u16_value, 2);
+			break;
+		case 4:
+			u32_value = simple_strtol(argv[5], 0, 0);
+   		bcm53115M_reg_write(page, offset, (u8 *)&u32_value, 4);
+			break;
+		default:
+			printf ("Usage:\n%s\n", cmdtp->usage);
+			return 1;
+		}
+	}
+	else {
+		printf ("Usage:\n%s\n", cmdtp->usage);
+		return 1;
+	}
+	
+	return 0;
+}
+
+U_BOOT_CMD(
+	bcm,	6,	1,	do_bcm,
+	"bcm     - read/write bcm53115m register\n",
+	"bcm read page offset len\n"
+	"bcm write page offset len value\n"
+	"len : must be 1, 2, 4 bytes\n"
+);

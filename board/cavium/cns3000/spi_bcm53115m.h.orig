@@ -1,0 +1,7 @@
+#ifndef _SPI_BCM53115M
+#define _SPI_BCM53115M
+
+int bcm53115M_reg_read(int page, int offset, u8 *buf, int len);
+int bcm53115M_reg_write(int page, int offset, u8 *buf, int len);
+
+#endif //_SPI_BCM53115M
