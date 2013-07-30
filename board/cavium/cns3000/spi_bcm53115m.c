@@ -371,76 +371,50 @@ int vsc7385_reg_write(u32 block, u32 subblock, u32 addr, u32 value)
 int vsc7385_sw_load(u8 *start_addr, u32 len)
 {
 	u32 value = 0;	
-	int i;
 
-/* 
-     1. Stop V-Core clock
-        ICPU_CTRL CLK_EN (bit 1) -> 0
-*/
 
-	vsc7385_reg_read(BLOCK_SYSTEM, SUBBLOCK_SYSTEM, ADDRESS_ICPU_CTRL, &value);
-	value &= ~(1 << 1);
+	u8 *dp; 
+	u32 mylen = len;
+
+	printf("Holding ICPU reset");
+	value = (1<<7) | (1<<3) | (1<<2) | (0<<0);  
 	vsc7385_reg_write(BLOCK_SYSTEM, SUBBLOCK_SYSTEM, ADDRESS_ICPU_CTRL, value);
 
-/*
-     2. Enable external access to on-chip RAM
-        ICPU_CTRL EXT_ACC_EN (bit 2) -> 1
-*/
+	printf("Loading ICPU (%d bytes) \n", mylen);
+	dp = start_addr;
+	value = 0;
+	vsc7385_reg_write(BLOCK_SYSTEM, SUBBLOCK_SYSTEM, ADDRESS_ICPU_ADDR, value);
+	while (mylen--)
+		vsc7385_reg_write(BLOCK_SYSTEM, SUBBLOCK_SYSTEM, ADDRESS_ICPU_DATA, *dp++);
+	printf("ICPU loaded \n");
 
-	value |= (1 << 2);
-	vsc7385_reg_write(BLOCK_SYSTEM, SUBBLOCK_SYSTEM, ADDRESS_ICPU_CTRL, value);
-
-/*
-     3. Write start address for code
-        ICPU_ADDR ADDR (bits 0-12) -> 0
-*/
 
 	value = 0;
 	vsc7385_reg_write(BLOCK_SYSTEM, SUBBLOCK_SYSTEM, ADDRESS_ICPU_ADDR, value);
-
-/*
-     4. Write data byte-at-a-time, address auto-increments 
-        ICPU_DATA DATA (bits 0-7)
-*/
-
-	for (i = 0; i < len; i++)
-	{
-		value = start_addr[i];
-		vsc7385_reg_write(BLOCK_SYSTEM, SUBBLOCK_SYSTEM, ADDRESS_ICPU_DATA, value);
+	udelay(20);
+	mylen = len;
+	dp = start_addr;
+	while (mylen--) {
+		value = 0;
+		vsc7385_reg_read(BLOCK_SYSTEM, SUBBLOCK_SYSTEM, ADDRESS_ICPU_DATA, &value);
+		udelay(20);
+		if(value!=*dp++) {   
+			printf("VSC7385: Upload mismatch: address 0x%x, "
+			"read val 0x%x, image val 0x%x\n", len-mylen+1,value,*(dp--));
+			return(-1);
+		}
 	}
 
-#if 0
-/*
-     5. Master reset
-        GLORESET MEM_LOCK (bit 2) -> 1
-        GLORESET MASTER_RESET (bit 0) -> 1
-        sleep 125 usec
-*/
 
-	value = (1<<2) | 1;
+	printf("Switch master reset:  Only the phy \n");
+	value = (1<<1);
 	vsc7385_reg_write(BLOCK_SYSTEM, SUBBLOCK_SYSTEM, ADDRESS_GLORESET, value);
 	udelay(150);
 
-/*
-     6. Set V-Core to boot from memory
-        ICPU_CTRL BOOT_EN (bit 3) -> 1
-*/
-
-	vsc7385_reg_read(BLOCK_SYSTEM, SUBBLOCK_SYSTEM, ADDRESS_ICPU_CTRL, &value);
-	value |= (1 << 3);
+	printf("Releasing ICPU from reset \n");
+	value = (1<<8) | (1<<3) | (1<<1) | (1<<0); 
 	vsc7385_reg_write(BLOCK_SYSTEM, SUBBLOCK_SYSTEM, ADDRESS_ICPU_CTRL, value);
 
-/*
-7. Start V-Core
-   ICPU_CTRL EXT_ACC_EN (bit 2) -> 0
-   ICPU_CTRL CLK_EN (bit 1) -> 1
-*/
-
-	value &= ~(1 << 2);
-	vsc7385_reg_write(BLOCK_SYSTEM, SUBBLOCK_SYSTEM, ADDRESS_ICPU_CTRL, value);
-	value |= (1 << 1);
-	vsc7385_reg_write(BLOCK_SYSTEM, SUBBLOCK_SYSTEM, ADDRESS_ICPU_CTRL, value);
-#endif
 
 	return 0;
 }
