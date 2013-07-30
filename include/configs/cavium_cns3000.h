@@ -61,6 +61,23 @@
 #define CNS3XXX_GPIO_SUPPORT
 
 #include <configs/cavium_cns3xxx_common.h>
+
+#ifdef CONFIG_BOOTCOMMAND
+#undef CONFIG_BOOTCOMMAND
+#endif
+#ifdef CONFIG_ENV_OFFSET
+#undef CONFIG_ENV_OFFSET
+#endif
+#ifdef CONFIG_ENV_ADDR 
+#undef CONFIG_ENV_ADDR 
+#endif
+#ifdef CONFIG_KERNEL_OFFSET 
+#undef CONFIG_KERNEL_OFFSET 
+#endif
+#ifdef CONFIG_BOOTARGS
+#undef CONFIG_BOOTARGS
+#endif
+
 #define CONFIG_BOOTCOMMAND "bootm 0x600B0000"
 #define CONFIG_ENV_OFFSET       0xA0000         /* the offset of u-boot environment on dataflash */
 
